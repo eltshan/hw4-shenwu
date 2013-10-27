@@ -110,4 +110,8 @@
 			</plugin>
 		</plugins>
 	</build>
+	<scm>
+		<connection>scm:git:git@github.com:eltshan/hw3-shenwu.git</connection>
+		<developerConnection>scm:git:git@github.com:eltshan/hw3-shenwu.git</developerConnection>
+	</scm>
 </project>
