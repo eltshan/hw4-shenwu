@@ -65,6 +65,7 @@ public class VectorSpaceRetrieval {
 		}
 		br.close();
 		br=null;
+		
 		anAnalysisEngine.collectionProcessComplete();
 		anAnalysisEngine.destroy();	
 		long endTime=System.currentTimeMillis();
