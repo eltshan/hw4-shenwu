@@ -43,8 +43,9 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 
   public ArrayList<Double> JaccardsimiList;
 
+  public ArrayList<Double> DicecoefficientList;
   public ArrayList<ArrayList<Double>> Jaccardsimilarity;
-
+  public ArrayList<ArrayList<Double>> DicecoefficientSimilarity;
   public ArrayList<Integer> StandardVector;
 
   public ArrayList<HashMap<String, Integer>> list;
@@ -60,15 +61,17 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
     qIdList = new ArrayList<Integer>();
 
     relList = new ArrayList<Integer>();
-
+    
     simiList = new ArrayList<Double>();
     JaccardsimiList = new ArrayList<Double>();
+    DicecoefficientList = new ArrayList<Double>();
     StandardVector = new ArrayList<Integer>();
     ArrayList<HashMap<String, Integer>> list = new ArrayList<HashMap<String, Integer>>();
     hashMapDictionary = new HashMap<String, Integer>();
     vector = new ArrayList<ArrayList<ArrayList<Integer>>>();
     similarity = new ArrayList<ArrayList<Double>>();
     Jaccardsimilarity = new ArrayList<ArrayList<Double>>();
+    DicecoefficientSimilarity= new ArrayList<ArrayList<Double>>();
     stopWords = new HashSet<String>();
     try {
       FileReader fr = new FileReader("src/main/resources/stopwords.txt");
@@ -105,6 +108,7 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 
     double tmp = 0;
     double tmp2 = 0;
+    double tmp3 = 0;
     // ArrayList<Double> currentSimilarity = new ArrayList<Double>();
     // LinkedList<Double> a = new LinkedList<Double> ();
     // while (it.hasNext()) {
@@ -133,6 +137,7 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 
         similarity.add(new ArrayList<Double>());
         Jaccardsimilarity.add(new ArrayList<Double>());
+        DicecoefficientSimilarity.add(new ArrayList<Double>());
 
         System.out.println("Standard text is:  " + doc.getText());
         tmp = 0;
@@ -161,15 +166,17 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
         // System.out.println(StandardVector);
 
         tmp2 = computeJaccardIndex(currentVector, StandardVector, tmpList.size());
+        tmp3 = computeDicecoefficient(currentVector, StandardVector, tmpList.size());
         similarity.get(doc.getQueryID() - 1).add(tmp);
-
-        // Jaccardsimilarity.get(currentQuerID - 1).add(tmp2);
-
+        DicecoefficientSimilarity.get(doc.getQueryID() - 1).add(tmp3);
+        Jaccardsimilarity.get(currentQuerID - 1).add(tmp2);
+        
         // similarity.get(currentQuerID-1).add(computeCosineSimilarity(doc.getVector(),StandardVector));
         System.out.println("current text is:  " + doc.getText());
         System.out.println("rel is: " + doc.getRelevanceValue());
         System.out.println("cosine similarity is :  " + tmp);
         System.out.println("Jaccard similarity is :  " + tmp2);
+        System.out.println("Dicecoefficient similarity is" + tmp3 );
 
       }
       // System.out.println(doc.getText());
@@ -181,6 +188,7 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
       relList.add(doc.getRelevanceValue());
       simiList.add(tmp);
       JaccardsimiList.add(tmp2);
+      DicecoefficientList.add(tmp3);
       // Do something useful here
     }
 
@@ -206,8 +214,11 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 
     double metric_mrr = compute_mrr(similarity, 1);
     double jmetric_mrr = compute_mrr(Jaccardsimilarity, 2);
+    double dmertic_mrr = compute_mrr(DicecoefficientSimilarity, 3);
     System.out.println(" (MRR) Mean Reciprocal Rank ::" + metric_mrr);
     System.out.println(" (MRR) Mean Reciprocal Rank ::" + jmetric_mrr);
+    System.out.println(" (MRR) Mean Reciprocal Rank ::" + dmertic_mrr);
+
     // /System.out.println(" (MRR) Mean Reciprocal Rank ::");
   }
 
@@ -294,15 +305,26 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
     double Union = 0;
     double intersection = 0;
     for (int i = 0; i < a.length; i++) {
-      if (b.get(i) > 0) {
-        Union++;
-      }
-      if (b.get(i) > 0) {
+      Union++;
+      if (a[i] > 0) {
         intersection++;
       }
+
     }
     Union += tokenNum - intersection;
+    System.out.println(tokenNum + " " + Union + " " + intersection);
     return intersection / Union;
+  }
+
+  private double computeDicecoefficient(int[] a, ArrayList<Integer> b, int tokenNum) {
+    double result = 0;
+    double upper = 0;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] > 0)
+        upper++;
+    }
+    return upper / (a.length + tokenNum);
+
   }
 
   private double computeJaccardIndex(IntegerArray a, IntegerArray b) {
@@ -319,6 +341,7 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
     }
     return intersection / Union;
   }
+
   private double computeJaccardIndex(IntegerArray a, ArrayList<Integer> b) {
     double JaccardIndex = 0.0;
     double Union = 0;
@@ -362,7 +385,8 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
       list = simiList;
     else if (type == 2)
       list = JaccardsimiList;
-
+    else if(type == 3)
+      list = DicecoefficientList;
     for (int i = 0; i < similarity.size(); i++) {
       if (similarity.get(i) > list.get(right))
         rank++;
